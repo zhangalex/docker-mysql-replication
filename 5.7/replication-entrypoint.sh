@@ -20,8 +20,16 @@ if [ -n "$MASTER_PORT_3306_TCP_ADDR" ]; then
   export MASTER_PORT=$MASTER_PORT_3306_TCP_PORT
 fi
 
+uuid=$(cat /proc/sys/kernel/random/uuid)
+cat >/var/lib/mysql/auto.cnf <<EOF
+[auto]
+server-uuid=$uuid
+EOF
+echo "------------"
+cat /var/lib/mysql/auto.cnf
+
 if [ -z "$MASTER_HOST" ]; then
-  export SERVER_ID=1
+  # export SERVER_ID=1
   cat >/docker-entrypoint-initdb.d/init-master.sh  <<'EOF'
 #!/bin/bash
 
@@ -43,7 +51,7 @@ mysql -u root -p$MYSQL_ROOT_PASSWORD -e "\
 EOF
 else
   # TODO: make server-id discoverable
-  export SERVER_ID=2
+  # export SERVER_ID=2
   cp -v /init-slave.sh /docker-entrypoint-initdb.d/
   cat > /etc/mysql/mysql.conf.d/repl-slave.cnf << EOF
 [mysqld]
